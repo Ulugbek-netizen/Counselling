@@ -154,6 +154,52 @@ export async function getThisWeekEvents(supabase: Client, schoolId: string): Pro
   return events;
 }
 
+export interface BirthdayReminder {
+  id: string;
+  name: string;
+  ageTurning: number;
+  daysUntil: number;
+  birthdayDate: string;
+}
+
+export async function getBirthdayStudents(supabase: Client, schoolId: string): Promise<BirthdayReminder[]> {
+  const { data: students } = await supabase
+    .from("profiles")
+    .select("id, first_name, last_name, birthday")
+    .eq("school_id", schoolId)
+    .eq("role", "student")
+    .not("birthday", "is", null);
+
+  if (!students?.length) return [];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const in7Days = new Date(today);
+  in7Days.setDate(today.getDate() + 7);
+
+  const results: BirthdayReminder[] = [];
+
+  for (const s of students) {
+    if (!s.birthday) continue;
+    const bday = new Date(s.birthday);
+
+    let next = new Date(today.getFullYear(), bday.getMonth(), bday.getDate());
+    if (next < today) next = new Date(today.getFullYear() + 1, bday.getMonth(), bday.getDate());
+    if (next > in7Days) continue;
+
+    const daysUntil = Math.round((next.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    results.push({
+      id: s.id,
+      name: `${s.first_name ?? ""} ${s.last_name ?? ""}`.trim(),
+      ageTurning: next.getFullYear() - bday.getFullYear(),
+      daysUntil,
+      birthdayDate: next.toLocaleDateString("en-GB", { month: "short", day: "numeric" }),
+    });
+  }
+
+  return results.sort((a, b) => a.daysUntil - b.daysUntil);
+}
+
 function getDatePlusDays(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);

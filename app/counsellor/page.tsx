@@ -6,9 +6,10 @@ import { NotificationBanner } from "@/components/dashboard/notification-banner";
 import { MiniCalendar } from "@/components/dashboard/mini-calendar";
 import { PriorityStudentsPanel } from "@/components/dashboard/priority-students";
 import { UrgentDeadlinesPanel } from "@/components/dashboard/urgent-deadlines";
-import { getDashboardStats, getThisWeekEvents } from "@/lib/queries/counsellor-dashboard";
+import { getDashboardStats, getThisWeekEvents, getBirthdayStudents } from "@/lib/queries/counsellor-dashboard";
 import { getCalendarEvents } from "@/lib/queries/calendar-events";
 import { getPriorityStudents, getUrgentDeadlines } from "@/lib/queries/priority-deadlines";
+import { BirthdayStrip } from "@/components/dashboard/birthday-strip";
 import type { UserRole } from "@/types/database";
 
 export default async function CounsellorDashboard() {
@@ -26,12 +27,13 @@ export default async function CounsellorDashboard() {
   if (!profile?.school_id) redirect("/");
 
   const s = supabase as any;
-  const [stats, weekEvents, calEvents, priorityStudents, urgentDeadlines] = await Promise.all([
+  const [stats, weekEvents, calEvents, priorityStudents, urgentDeadlines, birthdays] = await Promise.all([
     getDashboardStats(s, profile.school_id),
     getThisWeekEvents(s, profile.school_id),
     getCalendarEvents(s, profile.school_id),
     getPriorityStudents(s, profile.school_id),
     getUrgentDeadlines(s),
+    getBirthdayStudents(s, profile.school_id),
   ]);
 
   return (
@@ -51,6 +53,7 @@ export default async function CounsellorDashboard() {
       />
 
       <NotificationBanner events={weekEvents} />
+      <BirthdayStrip birthdays={birthdays} />
 
       <div className="flex-1 overflow-y-auto p-6">
         <div className="grid grid-cols-4 gap-4 mb-6">
