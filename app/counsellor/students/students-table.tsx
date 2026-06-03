@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { StudentRow } from "@/lib/queries/student-list";
 
 const STATUS_STYLES = {
@@ -25,6 +26,7 @@ const DEADLINE_STYLES = {
 
 export function StudentsTable({ students }: { students: StudentRow[] }) {
   const [search, setSearch] = useState("");
+  const router = useRouter();
 
   const filtered = students.filter((s) => {
     const q = search.toLowerCase();
@@ -67,6 +69,7 @@ export function StudentsTable({ students }: { students: StudentRow[] }) {
           return (
             <div
               key={s.id}
+              onClick={() => router.push(`/counsellor/students/${s.id}`)}
               className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_80px] px-4 py-3 border-b border-cream-mid last:border-b-0 hover:bg-cream/50 transition-colors cursor-pointer items-center"
             >
               <div className="flex items-center gap-2.5">
